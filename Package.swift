@@ -93,11 +93,18 @@ if let pod_archive_path = ProcessInfo.processInfo.environment["ORT_POD_LOCAL_PAT
 
 } else {
     // ORT release
+    //
+    // masicai fork: pinned to ORT 1.23.0 instead of 1.24.2 to avoid the KleidiAI
+    // conv/IGEMM memory regression in ORT 1.24.x on SME-capable ARM64 devices
+    // (https://github.com/microsoft/onnxruntime/issues/29538, fixed upstream by
+    // https://github.com/microsoft/onnxruntime/pull/28571, expected in ORT 1.28).
+    // The objectivec/ bindings source in this repo is byte-identical between the
+    // upstream v1.23.0 and v1.24.2 tags, so only this binary pin changes.
     package.targets.append(
        Target.binaryTarget(name: "onnxruntime",
-                           url: "https://download.onnxruntime.ai/pod-archive-onnxruntime-c-1.24.2.zip",
+                           url: "https://download.onnxruntime.ai/pod-archive-onnxruntime-c-1.23.0.zip",
                            // SHA256 checksum
-                           checksum: "f7100a992d2a8135168c8afd831e6a58b465349101982aa58b3e11d36e600b54")
+                           checksum: "756a78e0168f29840bc614b43aeb03e63673f44022e0221d21698a2c8ed747ef")
     )
 }
 
