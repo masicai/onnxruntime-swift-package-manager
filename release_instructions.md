@@ -63,3 +63,28 @@ Create a release tag from the `main` branch.
 
 The tag should match the tag of the corresponding onnxruntime release excluding the leading `v` in order to make it a valid semantic version string.
 E.g., for onnxruntime tag `v1.20.0`, the onnxruntime-swift-package-manager tag should be `1.20.0`.
+
+
+## masicai fork: releasing a repackaged ORT binary
+
+This fork does not point the `onnxruntime` binary target at Microsoft's pod archive. The pod archive wraps static libraries in `.framework` bundles, and Xcode embeds framework-format SPM binary targets into the app bundle with a generated stub dylib, which App Store Connect validation rejects (ITMS-90208/90360/90530; see microsoft/onnxruntime#27396 and masicai/flutter_onnxruntime#71). Instead, the binary target points at a library-format xcframework (plain static libraries + headers) hosted as a GitHub release asset of this repo.
+
+To release, after syncing `objectivec/` as described above:
+
+1. Repackage Microsoft's pod archive:
+
+   ```
+   ./scripts/repackage_ort_spm_artifact.sh <ort-version>   # e.g. 1.23.0
+   ```
+
+   This downloads `pod-archive-onnxruntime-c-<ort-version>.zip` from Microsoft's CDN, converts it, writes `onnxruntime-libs-<ort-version>.zip`, and prints its SwiftPM checksum.
+
+2. Pick the release tag. Fork tags must not collide with a version Microsoft could plausibly publish binaries for: for a packaging-only respin of ORT `x.y.0`, use the next free patch number (e.g. `1.23.1` for ORT 1.23.0 — upstream's 1.23 line only ever shipped 1.23.0).
+
+3. Update the `onnxruntime` binary target in `Package.swift`: URL `https://github.com/masicai/onnxruntime-swift-package-manager/releases/download/<tag>/onnxruntime-libs-<ort-version>.zip` and the checksum printed in step 1.
+
+4. Merge to `main`, tag the merge commit, then create the GitHub release for that tag and upload the zip.
+
+   **Upload the exact file whose checksum went into `Package.swift`.** Re-running the script produces a byte-different zip (archive timestamps) with a different checksum; if you regenerate, update `Package.swift` before tagging.
+
+5. Verify from a consumer (e.g. flutter_onnxruntime example app): pin the new tag, `flutter clean`, build for iOS, and confirm the app bundle's `Frameworks/` directory contains no `onnxruntime.framework`.
