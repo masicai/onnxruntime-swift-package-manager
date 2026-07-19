@@ -100,11 +100,22 @@ if let pod_archive_path = ProcessInfo.processInfo.environment["ORT_POD_LOCAL_PAT
     // https://github.com/microsoft/onnxruntime/pull/28571, expected in ORT 1.28).
     // The objectivec/ bindings source in this repo is byte-identical between the
     // upstream v1.23.0 and v1.24.2 tags, so only this binary pin changes.
+    //
+    // The artifact is a LIBRARY-format xcframework (static libraries + headers)
+    // repackaged from Microsoft's official pod-archive-onnxruntime-c-1.23.0.zip by
+    // scripts/repackage_ort_spm_artifact.sh. The pod archive wraps its static
+    // libraries in .framework bundles, and Xcode embeds framework-format binary
+    // targets into the app bundle with a generated stub dylib, which App Store
+    // Connect validation rejects (ITMS-90208/90360/90530; see
+    // https://github.com/microsoft/onnxruntime/issues/27396 and
+    // https://github.com/masicai/flutter_onnxruntime/issues/71). Library-format
+    // targets are link-only, so nothing gets embedded.
     package.targets.append(
        Target.binaryTarget(name: "onnxruntime",
-                           url: "https://download.onnxruntime.ai/pod-archive-onnxruntime-c-1.23.0.zip",
-                           // SHA256 checksum
-                           checksum: "756a78e0168f29840bc614b43aeb03e63673f44022e0221d21698a2c8ed747ef")
+                           url: "https://github.com/masicai/onnxruntime-swift-package-manager/releases/download/1.23.1/onnxruntime-libs-1.23.0.zip",
+                           // SwiftPM (SHA256) checksum of the release asset; recompute with
+                           // `swift package compute-checksum <zip>` if the asset is regenerated.
+                           checksum: "4bd86356e2d5aab1b8ece609bb9caa63161a6d79d21244da007f9fda6830ff3b")
     )
 }
 
@@ -112,6 +123,11 @@ if let ext_pod_archive_path = ProcessInfo.processInfo.environment["ORT_EXTENSION
     package.targets.append(Target.binaryTarget(name: "onnxruntime_extensions", path: ext_pod_archive_path))
 } else {
     // ORT Extensions release
+    //
+    // NOTE: still Microsoft's framework-format pod archive, so the App Store
+    // embedding issue described above applies to apps that consume the
+    // "onnxruntime_extensions" product. Repackage it the same way if needed
+    // (flutter_onnxruntime does not use it).
     package.targets.append(
         Target.binaryTarget(name: "onnxruntime_extensions",
                             url: "https://download.onnxruntime.ai/pod-archive-onnxruntime-extensions-c-0.13.0.zip",
