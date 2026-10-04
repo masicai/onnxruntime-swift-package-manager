@@ -94,15 +94,16 @@ if let pod_archive_path = ProcessInfo.processInfo.environment["ORT_POD_LOCAL_PAT
 } else {
     // ORT release
     //
-    // masicai fork: pinned to ORT 1.23.0 instead of 1.24.2 to avoid the KleidiAI
-    // conv/IGEMM memory regression in ORT 1.24.x on SME-capable ARM64 devices
-    // (https://github.com/microsoft/onnxruntime/issues/29538, fixed upstream by
-    // https://github.com/microsoft/onnxruntime/pull/28571, expected in ORT 1.28).
-    // The objectivec/ bindings source in this repo is byte-identical between the
-    // upstream v1.23.0 and v1.24.2 tags, so only this binary pin changes.
+    // masicai fork: pinned to ORT 1.28.0, the first release with the KleidiAI
+    // conv/IGEMM memory fix (https://github.com/microsoft/onnxruntime/pull/28571)
+    // for the 1.24.x regression on SME-capable ARM64 devices
+    // (https://github.com/microsoft/onnxruntime/issues/29538). Kept below 1.29,
+    // which turns on telemetry by default. The objectivec/ bindings source in this
+    // repo is byte-identical between the upstream v1.23.0, v1.24.2 and v1.28.0
+    // tags, so only this binary pin changes.
     //
     // The artifact is a LIBRARY-format xcframework (static libraries + headers)
-    // repackaged from Microsoft's official pod-archive-onnxruntime-c-1.23.0.zip by
+    // repackaged from Microsoft's official pod-archive-onnxruntime-c-1.28.0.zip by
     // scripts/repackage_ort_spm_artifact.sh. The pod archive wraps its static
     // libraries in .framework bundles, and Xcode embeds framework-format binary
     // targets into the app bundle with a generated stub dylib, which App Store
@@ -112,10 +113,10 @@ if let pod_archive_path = ProcessInfo.processInfo.environment["ORT_POD_LOCAL_PAT
     // targets are link-only, so nothing gets embedded.
     package.targets.append(
        Target.binaryTarget(name: "onnxruntime",
-                           url: "https://github.com/masicai/onnxruntime-swift-package-manager/releases/download/1.23.1/onnxruntime-libs-1.23.0.zip",
+                           url: "https://github.com/masicai/onnxruntime-swift-package-manager/releases/download/1.28.0/onnxruntime-libs-1.28.0.zip",
                            // SwiftPM (SHA256) checksum of the release asset; recompute with
                            // `swift package compute-checksum <zip>` if the asset is regenerated.
-                           checksum: "4bd86356e2d5aab1b8ece609bb9caa63161a6d79d21244da007f9fda6830ff3b")
+                           checksum: "7e031979787f2da0f3ff45d18431db93c4443033020b210413b287a855870c3c")
     )
 }
 
