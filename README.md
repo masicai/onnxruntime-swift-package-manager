@@ -9,10 +9,13 @@ SPM is the alternative to CocoaPods when desired platform to consume is mobile i
 
 This fork serves [flutter_onnxruntime](https://github.com/masicai/flutter_onnxruntime). It pins an ORT release that Microsoft's SPM repo has no tag for, and it ships the ORT binary as a library-format xcframework instead of the framework-format pod archive, which Xcode embeds into the app and App Store Connect then rejects (ITMS-90208, [flutter_onnxruntime#71](https://github.com/masicai/flutter_onnxruntime/issues/71)). The artifact is produced by `scripts/repackage_ort_spm_artifact.sh <ort-version>` and attached to the GitHub release of the tag.
 
-Fork tags do not always match the ORT version they ship. In the case of 1.23.1, we use that version to fix the packaging of ORT 1.23.0:
+This fork has no `onnxruntime_extensions` product. Fork tag 1.28.1 removed it because its binary lived on Microsoft's `download.onnxruntime.ai`, which has been unreachable since 2026-11-20. SwiftPM downloads every binary target of a package, so that dead URL broke clean resolves even for apps that only use the `onnxruntime` product ([flutter_onnxruntime#83](https://github.com/masicai/flutter_onnxruntime/issues/83)). Older fork tags still reference it.
+
+Fork tags do not always match the ORT version they ship. Tags 1.23.1 and 1.28.1 only fix the packaging of ORT 1.23.0 and 1.28.0:
 
 | Fork tag | ORT version | Release asset |
 |---|---|---|
+| `1.28.1` | 1.28.0 | `onnxruntime-libs-1.28.0.zip` from the `1.28.0` release (no extensions product) |
 | `1.28.0` | 1.28.0 | `onnxruntime-libs-1.28.0.zip` |
 | `1.23.1` | 1.23.0 | `onnxruntime-libs-1.23.0.zip` |
 | `1.23.0` | 1.23.0 | Microsoft's framework-format pod archive (affected by ITMS-90208) |

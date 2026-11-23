@@ -25,9 +25,13 @@ let package = Package(
         .library(name: "onnxruntime",
                  type: .static,
                  targets: ["OnnxRuntimeBindings"]),
-        .library(name: "onnxruntime_extensions",
-                 type: .static,
-                 targets: ["OnnxRuntimeExtensions"]),
+        // masicai fork: the "onnxruntime_extensions" product was removed in fork tag
+        // 1.28.1. Its binary target pointed at Microsoft's download.onnxruntime.ai,
+        // which has served a wrong TLS certificate and 404s since 2026-11-20. SwiftPM
+        // downloads every binary target of a package, used or not, so that dead URL
+        // broke clean resolves for consumers of the "onnxruntime" product too
+        // (https://github.com/masicai/flutter_onnxruntime/issues/83).
+        // flutter_onnxruntime never used the extensions product.
     ],
     dependencies: [],
     targets: [
@@ -50,18 +54,6 @@ let package = Package(
                     path: "swift/OnnxRuntimeBindingsTests",
                     resources: [
                         .copy("Resources/single_add.basic.ort")
-                    ]),
-        .target(name: "OnnxRuntimeExtensions",
-                dependencies: ["onnxruntime_extensions", "onnxruntime"],
-                path: "extensions",
-                cxxSettings: [
-                    .define("ORT_SWIFT_PACKAGE_MANAGER_BUILD"),
-                ]),
-        .testTarget(name: "OnnxRuntimeExtensionsTests",
-                    dependencies: ["OnnxRuntimeExtensions", "OnnxRuntimeBindings"],
-                    path: "swift/OnnxRuntimeExtensionsTests",
-                    resources: [
-                        .copy("Resources/decode_image.onnx")
                     ]),
     ],
     cxxLanguageStandard: .cxx17
@@ -111,28 +103,14 @@ if let pod_archive_path = ProcessInfo.processInfo.environment["ORT_POD_LOCAL_PAT
     // https://github.com/microsoft/onnxruntime/issues/27396 and
     // https://github.com/masicai/flutter_onnxruntime/issues/71). Library-format
     // targets are link-only, so nothing gets embedded.
+    //
+    // Fork tag 1.28.1 only drops the extensions product (see above). It ships the
+    // same ORT 1.28.0 binary, so it keeps pointing at the asset of the 1.28.0 release.
     package.targets.append(
        Target.binaryTarget(name: "onnxruntime",
                            url: "https://github.com/masicai/onnxruntime-swift-package-manager/releases/download/1.28.0/onnxruntime-libs-1.28.0.zip",
                            // SwiftPM (SHA256) checksum of the release asset; recompute with
                            // `swift package compute-checksum <zip>` if the asset is regenerated.
                            checksum: "7e031979787f2da0f3ff45d18431db93c4443033020b210413b287a855870c3c")
-    )
-}
-
-if let ext_pod_archive_path = ProcessInfo.processInfo.environment["ORT_EXTENSIONS_POD_LOCAL_PATH"] {
-    package.targets.append(Target.binaryTarget(name: "onnxruntime_extensions", path: ext_pod_archive_path))
-} else {
-    // ORT Extensions release
-    //
-    // NOTE: still Microsoft's framework-format pod archive, so the App Store
-    // embedding issue described above applies to apps that consume the
-    // "onnxruntime_extensions" product. Repackage it the same way if needed
-    // (flutter_onnxruntime does not use it).
-    package.targets.append(
-        Target.binaryTarget(name: "onnxruntime_extensions",
-                            url: "https://download.onnxruntime.ai/pod-archive-onnxruntime-extensions-c-0.13.0.zip",
-                            // SHA256 checksum
-                            checksum: "346522d1171d4c99cb0908fa8e4e9330a4a6aad39cd83ce36eb654437b33e6b5")
     )
 }
