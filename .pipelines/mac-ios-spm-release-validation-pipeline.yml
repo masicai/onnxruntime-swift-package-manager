@@ -10,8 +10,8 @@
     steps:
     - template: templates/use-xcode-version.yml
 
-    # Note: Running xcodebuild test on `onnxruntime-Package` scheme will perform swift tests for both OnnxRuntimeBindings
-    # and OnnxRuntimeExtensions targets.
+    # Note: Running xcodebuild test on `onnxruntime-Package` scheme will perform swift tests for the OnnxRuntimeBindings
+    # target.
     - script: |
         set -e -x
         xcodebuild test -scheme onnxruntime-Package -destination 'platform=iOS Simulator,name=iPhone 16'

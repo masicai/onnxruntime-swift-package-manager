@@ -67,6 +67,10 @@ E.g., for onnxruntime tag `v1.20.0`, the onnxruntime-swift-package-manager tag s
 
 ## masicai fork: releasing a repackaged ORT binary
 
+The fork has no `onnxruntime_extensions` target (removed in fork tag 1.28.1, see the README), so skip the extensions steps above.
+
+As of 2026-11, Microsoft's `download.onnxruntime.ai` (which `scripts/repackage_ort_spm_artifact.sh` downloads from) and the `microsoft/onnxruntime*` GitHub repos are unreachable. Until they return, the next ORT bump needs another verified source for the Apple pod archive.
+
 This fork does not point the `onnxruntime` binary target at Microsoft's pod archive. The pod archive wraps static libraries in `.framework` bundles, and Xcode embeds framework-format SPM binary targets into the app bundle with a generated stub dylib, which App Store Connect validation rejects (ITMS-90208/90360/90530; see microsoft/onnxruntime#27396 and masicai/flutter_onnxruntime#71). Instead, the binary target points at a library-format xcframework (plain static libraries + headers) hosted as a GitHub release asset of this repo.
 
 To release, after syncing `objectivec/` as described above:
